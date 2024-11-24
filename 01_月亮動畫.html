@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>月亮動畫</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #0a0a2a;
+            cursor: none;
+        }
+
+        .star {
+            position: absolute;
+            border-radius: 50%;
+            animation: twinkle 1.5s infinite alternate;
+        }
+
+        @keyframes twinkle {
+            0% { 
+                opacity: 0.2;
+                transform: scale(0.8);
+            }
+            100% { 
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        #earth {
+            position: absolute;
+            font-size: 300px;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            user-select: none;
+            z-index: 1;
+        }
+
+        #moon {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            user-select: none;
+            transition: all 0.2s ease;
+        }
+
+        #moon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .meteor {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: linear-gradient(to right, white 0%, rgba(255,255,255,0.4) 50%, transparent 100%);
+            transform-origin: left center;
+            animation: meteor 2s linear;
+            pointer-events: none;
+        }
+
+        .explosion {
+            position: absolute;
+            font-size: 150px;
+            animation: explode 0.5s linear;
+            pointer-events: none;
+        }
+
+        @keyframes meteor {
+            0% {
+                width: 4px;
+                transform: translateX(0) translateY(0) rotate(-45deg);
+            }
+            100% {
+                width: 100px;
+                transform: translateX(300px) translateY(300px) rotate(-45deg);
+            }
+        }
+
+        @keyframes explode {
+            0% { 
+                opacity: 1;
+                transform: scale(0.5);
+            }
+            100% { 
+                opacity: 0;
+                transform: scale(2.5);
+            }
+        }
+
+        .bullet {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: yellow;
+            border-radius: 50%;
+            box-shadow: 0 0 10px yellow;
+            pointer-events: none;
+        }
+
+        .alien-bullet {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: lime;
+            border-radius: 50%;
+            box-shadow: 0 0 10px lime;
+            pointer-events: none;
+        }
+
+        .health-bar {
+            position: fixed;
+            height: 20px;
+            background-color: #333;
+            border: 2px solid #666;
+            border-radius: 10px;
+            overflow: hidden;
+            top: 20px;
+            right: 20px;
+            width: 200px;
+        }
+
+        .health-bar-fill {
+            height: 100%;
+            background-color: #2ecc71;
+            transition: width 0.3s ease;
+        }
+
+        .score-display {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px black;
+        }
+
+        #game-over, #game-win {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            text-shadow: 2px 2px 4px black;
+            z-index: 1000;
+        }
+
+        #game-over {
+            color: red;
+        }
+
+        #game-win {
+            color: #2ecc71;
+        }
+
+        .alien {
+            position: absolute;
+            font-size: 40px;
+            user-select: none;
+            z-index: 1;
+            transition: transform 0.3s ease;
+        }
+
+        .restart-button {
+            position: fixed;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 15px 30px;
+            font-size: 24px;
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+            z-index: 1000;
+        }
+
+        .restart-button:hover {
+            background-color: #27ae60;
+        }
+
+        .score-popup {
+            position: absolute;
+            color: #2ecc71;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            animation: scoreFloat 1s ease-out forwards;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        @keyframes scoreFloat {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="score-display">分數: <span id="score">0</span></div>
+    <div id="station-health" class="health-bar">
+        <div class="health-bar-fill"></div>
+        <div class="health-text">太空站生命值: 100</div>
+    </div>
+    <div id="earth">🌍</div>
+    <div id="moon">
+        <img src="./image/station 1.png" alt="Space Station">
+    </div>
+
+    <!-- Add health bars -->
+    <div id="station-health" class="health-bar">
+        <div class="health-bar-fill"></div>
+        <div class="health-text">太空站生命值: 100</div>
+    </div>
+    <div id="earth-health" class="health-bar">
+        <div class="health-bar-fill"></div>
+        <div class="health-text">地球生命值: 100</div>
+    </div>
+
+    <script>
+        // 地球動畫
+        const earthPhases = ['🌍', '🌎', '🌏'];
+        let currentEarthPhase = 0;
+        const earth = document.getElementById('earth');
+
+        // 創建星星
+        function createStars(count) {
+            // 定義星星可能的顏色
+            const starColors = [
+                '#FFD700', // 金色
+                '#FF69B4', // 粉紅
+                '#87CEEB', // 天藍
+                '#98FB98', // 淺綠
+                '#DDA0DD', // 淺紫
+                '#F0E68C', // 淺黃
+                '#00FFFF', // 青色
+                '#FF6B6B', // 珊瑚紅
+                '#E6E6FA', // 淺紫羅蘭
+                '#FFFFFF'  // 白色
+            ];
+
+            for (let i = 0; i < count; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                
+                // 隨機位置
+                star.style.left = Math.random() * 100 + 'vw';
+                star.style.top = Math.random() * 100 + 'vh';
+                
+                // 隨機大小 (稍微加大一些)
+                const size = Math.random() * 4 + 1;
+                star.style.width = size + 'px';
+                star.style.height = size + 'px';
+                
+                // 隨機顏色
+                const color = starColors[Math.floor(Math.random() * starColors.length)];
+                star.style.backgroundColor = color;
+                star.style.boxShadow = `0 0 ${size + 2}px ${color}`; // 添加發光效果
+                
+                // 隨機動畫延遲
+                star.style.animationDelay = Math.random() * 2 + 's';
+                
+                document.body.appendChild(star);
+            }
+        }
+
+        // 地球動畫
+        function animateEarth() {
+            setInterval(() => {
+                currentEarthPhase = (currentEarthPhase + 1) % earthPhases.length;
+                earth.textContent = earthPhases[currentEarthPhase];
+            }, 1000); // 每秒更換一次
+        }
+
+        // 修改跟隨滑鼠移動，加入z-index邏輯
+        document.addEventListener('mousemove', (e) => {
+            const centerX = window.innerWidth / 2;
+            moon.style.left = (e.clientX - 100) + 'px';
+            moon.style.top = (e.clientY - 100) + 'px';
+            
+            // 當滑鼠在螢幕中心點側時，月亮在地球下方
+            if (e.clientX > centerX) {
+                moon.style.zIndex = 0;
+            } else {
+                moon.style.zIndex = 2;
+            }
+        });
+
+        // 創建流星
+        function createMeteor() {
+            const meteor = document.createElement('div');
+            meteor.className = 'meteor';
+            
+            // 隨機起始位置（擴大範圍）
+            meteor.style.left = (Math.random() * window.innerWidth - 200) + 'px';
+            meteor.style.top = '-100px';  // 從更高的位置開始
+            
+            // 計算流星移動角度
+            const angle = -45 - (Math.random() * 20);  // 隨機角度變化
+            meteor.style.transform = `rotate(${angle}deg)`;
+            
+            document.body.appendChild(meteor);
+            checkCollision(meteor);
+            
+            meteor.addEventListener('animationend', () => {
+                meteor.remove();
+            });
+        }
+
+        // 檢查碰撞
+        function checkCollision(meteor) {
+            const moonRect = moon.getBoundingClientRect();
+            
+            const collisionCheck = setInterval(() => {
+                const meteorRect = meteor.getBoundingClientRect();
+                
+                if (isColliding(meteorRect, moonRect)) {
+                    // 創建爆炸效果
+                    createExplosion(meteorRect.left, meteorRect.top);
+                    // 移除流星
+                    meteor.remove();
+                    clearInterval(collisionCheck);
+                }
+            }, 50);
+        }
+
+        // 碰撞檢測
+        function isColliding(rect1, rect2) {
+            return !(rect1.right < rect2.left || 
+                    rect1.left > rect2.right || 
+                    rect1.bottom < rect2.top || 
+                    rect1.top > rect2.bottom);
+        }
+
+        // 創建爆炸效果
+        function createExplosion(x, y) {
+            const explosion = document.createElement('div');
+            explosion.className = 'explosion';
+            explosion.textContent = '💥';
+            // 調整爆炸位置補償
+            explosion.style.left = (x - 75) + 'px';
+            explosion.style.top = (y - 75) + 'px';
+            
+            document.body.appendChild(explosion);
+            
+            explosion.addEventListener('animationend', () => {
+                explosion.remove();
+            });
+        }
+
+        // 更頻繁地產生流星
+        setInterval(createMeteor, 1500); // 每1.5秒產生一顆流星
+
+        // 初始化
+        createStars(300); // 增加到300顆星星
+        animateEarth();
+
+        // 遊戲狀態
+        const gameState = {
+            health: 100,
+            score: 0,
+            isGameOver: false
+        };
+
+        // 更新分數顯示
+        function updateScore() {
+            const scoreElement = document.getElementById('score');
+            scoreElement.textContent = gameState.score;
+            
+            // 檢查是否達到勝利條件
+            if (gameState.score >= 100) {
+                gameWin();
+            }
+        }
+
+        // 發射子彈
+        function shootBullet() {
+            if (gameState.isGameOver) return;
+
+            const bullet = document.createElement('div');
+            bullet.className = 'bullet';
+            
+            // 從太空站中心發射
+            const moonRect = moon.getBoundingClientRect();
+            const startX = moonRect.left + moonRect.width/2;
+            const startY = moonRect.top + moonRect.height/2;
+            
+            // 設定子彈初始位置
+            bullet.style.left = startX + 'px';
+            bullet.style.top = startY + 'px';
+            
+            document.body.appendChild(bullet);
+
+            // 計算射擊方向
+            const angle = Math.atan2(
+                mouseY - startY,
+                mouseX - startX
+            );
+            
+            // 子彈速度
+            const speed = 10;
+            const velocityX = Math.cos(angle) * speed;
+            const velocityY = Math.sin(angle) * speed;
+            
+            // 子彈當前位置
+            let currentX = startX;
+            let currentY = startY;
+            
+            // 子彈移動
+            function updateBullet() {
+                if (!document.body.contains(bullet)) return;
+                
+                // 更新位置
+                currentX += velocityX;
+                currentY += velocityY;
+                bullet.style.left = currentX + 'px';
+                bullet.style.top = currentY + 'px';
+                
+                // 檢查是否擊中外星人
+                const bulletRect = bullet.getBoundingClientRect();
+                const aliens = document.querySelectorAll('.alien');
+                
+                aliens.forEach(alien => {
+                    if (!document.body.contains(bullet)) return;
+                    
+                    const alienRect = alien.getBoundingClientRect();
+                    if (isColliding(bulletRect, alienRect)) {
+                        // 外星人被擊中
+                        createExplosion(alienRect.left, alienRect.top);
+                        alien.remove();
+                        bullet.remove();
+                        
+                        // 增加分數並更新顯示
+                        gameState.score += 5;
+                        updateScore();
+                        
+                        // 播放爆炸音效（如果有的話）
+                        if (explosionSound) {
+                            explosionSound.currentTime = 0;
+                            explosionSound.play().catch(err => console.log('無法播放音效'));
+                        }
+                        
+                        // 顯示得分動畫
+                        showScorePopup(alienRect.left, alienRect.top);
+                        return;
+                    }
+                });
+                
+                // 檢查是否超出螢幕
+                if (currentX < 0 || currentX > window.innerWidth || 
+                    currentY < 0 || currentY > window.innerHeight) {
+                    bullet.remove();
+                    return;
+                }
+                
+                requestAnimationFrame(updateBullet);
+            }
+            
+            updateBullet();
+        }
+
+        // 顯示得分動畫
+        function showScorePopup(x, y) {
+            const popup = document.createElement('div');
+            popup.className = 'score-popup';
+            popup.textContent = '+5';
+            popup.style.left = x + 'px';
+            popup.style.top = y + 'px';
+            document.body.appendChild(popup);
+            
+            // 1秒後移除得分動畫
+            setTimeout(() => popup.remove(), 1000);
+        }
+
+        // 添加得分動畫樣式
+        const style = document.createElement('style');
+        style.textContent = `
+            .score-popup {
+                position: absolute;
+                color: #2ecc71;
+                font-size: 24px;
+                font-weight: bold;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+                animation: scoreFloat 1s ease-out forwards;
+                pointer-events: none;
+                z-index: 1000;
+            }
+
+            @keyframes scoreFloat {
+                0% {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+                100% {
+                    transform: translateY(-50px);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // 遊戲勝利
+        function gameWin() {
+            gameState.isGameOver = true;
+            
+            // 創建勝利訊息
+            const winMessage = document.createElement('div');
+            winMessage.style.position = 'fixed';
+            winMessage.style.top = '50%';
+            winMessage.style.left = '50%';
+            winMessage.style.transform = 'translate(-50%, -50%)';
+            winMessage.style.color = '#2ecc71';
+            winMessage.style.fontSize = '48px';
+            winMessage.style.fontWeight = 'bold';
+            winMessage.style.textShadow = '2px 2px 4px rgba(0,0,0,0.5)';
+            winMessage.textContent = '恭喜勝利！';
+            document.body.appendChild(winMessage);
+            
+            // 停止產生外星人
+            clearInterval(alienInterval);
+        }
+
+        // 初始化分數顯示
+        updateScore();
+
+        // 創建外星人
+        function createAlien() {
+            const alien = document.createElement('div');
+            alien.className = 'alien';
+            alien.textContent = '👾';
+            
+            // 隨機起始位置（在螢幕邊緣）
+            const side = Math.floor(Math.random() * 4); // 0:上 1:右 2:下 3:左
+            let startX, startY;
+            
+            switch(side) {
+                case 0: // 上
+                    startX = Math.random() * window.innerWidth;
+                    startY = -50;
+                    break;
+                case 1: // 右
+                    startX = window.innerWidth + 50;
+                    startY = Math.random() * window.innerHeight;
+                    break;
+                case 2: // 下
+                    startX = Math.random() * window.innerWidth;
+                    startY = window.innerHeight + 50;
+                    break;
+                case 3: // 左
+                    startX = -50;
+                    startY = Math.random() * window.innerHeight;
+                    break;
+            }
+            
+            alien.style.left = startX + 'px';
+            alien.style.top = startY + 'px';
+            
+            document.body.appendChild(alien);
+            
+            // 外星人移動和攻擊AI
+            let position = { x: startX, y: startY };
+            let targetUpdateTime = 0;
+            let currentTarget = { x: 0, y: 0 };
+            
+            function moveAlien() {
+                if (!document.body.contains(alien)) return;
+                
+                const now = Date.now();
+                
+                // 每2秒更新一次目標位置
+                if (now - targetUpdateTime > 2000) {
+                    const earthRect = earth.getBoundingClientRect();
+                    const moonRect = moon.getBoundingClientRect();
+                    
+                    // 50%機率追蹤地球或太空站
+                    if (Math.random() < 0.5) {
+                        currentTarget.x = earthRect.left + earthRect.width/2;
+                        currentTarget.y = earthRect.top + earthRect.height/2;
+                    } else {
+                        currentTarget.x = moonRect.left + moonRect.width/2;
+                        currentTarget.y = moonRect.top + moonRect.height/2;
+                    }
+                    
+                    targetUpdateTime = now;
+                }
+                
+                // 計算移動方向
+                const dx = currentTarget.x - position.x;
+                const dy = currentTarget.y - position.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                // 移動速度
+                const speed = 3;
+                if (distance > 0) {
+                    position.x += (dx / distance) * speed;
+                    position.y += (dy / distance) * speed;
+                }
+                
+                alien.style.left = position.x + 'px';
+                alien.style.top = position.y + 'px';
+                
+                requestAnimationFrame(moveAlien);
+            }
+            
+            moveAlien();
+        }
+
+        // 遊戲結束
+        function gameOver() {
+            gameState.isGameOver = true;
+            
+            const gameOver = document.createElement('div');
+            gameOver.id = 'game-over';
+            gameOver.textContent = '遊戲結束';
+            document.body.appendChild(gameOver);
+            
+            showRestartButton();
+            
+            clearInterval(alienSpawnInterval);
+            document.querySelectorAll('.alien, .alien-bullet, .bullet').forEach(el => el.remove());
+        }
+
+        // 顯示重新開始按鈕
+        function showRestartButton() {
+            const button = document.createElement('button');
+            button.className = 'restart-button';
+            button.textContent = '重新開始';
+            button.onclick = restartGame;
+            document.body.appendChild(button);
+            button.style.display = 'block';
+        }
+
+        // 重新開始遊戲
+        function restartGame() {
+            // 移除遊戲結束/勝利訊息和重新開始按鈕
+            document.querySelectorAll('#game-over, #game-win, .restart-button').forEach(el => el.remove());
+            
+            // 重置遊戲狀態
+            gameState.health = 100;
+            gameState.score = 0;
+            gameState.isGameOver = false;
+            
+            // 移除所有外星人和子彈
+            document.querySelectorAll('.alien, .alien-bullet, .bullet').forEach(el => el.remove());
+            
+            // 更新顯示
+            updateDisplay();
+            
+            // 重新開始產生外星人
+            alienSpawnInterval = setInterval(createAlien, 3000);
+        }
+
+        // 初始化
+        let alienSpawnInterval = setInterval(createAlien, 3000);
+        updateDisplay();
+    </script>
+</body>
+</html>

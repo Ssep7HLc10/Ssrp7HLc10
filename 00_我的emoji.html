@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Emoji 列表</title>
+    <style>
+        .emoji-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            padding: 20px;
+        }
+
+        .emoji-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .emoji-item:hover {
+            background-color: #f0f0f0;
+        }
+
+        .emoji {
+            font-size: 2em;
+        }
+
+        .code {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .copied {
+            background-color: #e6ffe6;
+        }
+
+        /* 添加搜索框樣式 */
+        .search-container {
+            padding: 20px;
+            text-align: center;
+        }
+        
+        #searchInput {
+            width: 300px;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        /* 添加提示訊息樣式 */
+        .tooltip {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 5px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- 添加搜索框 -->
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="搜尋 Emoji...">
+    </div>
+    <div class="emoji-container" id="emojiContainer"></div>
+    <div class="tooltip" id="tooltip">已複製!</div>
+
+    <script>
+        function generateEmojis() {
+            const container = document.getElementById('emojiContainer');
+            const ranges = [
+                [0x1F300, 0x1F9FF],  // Miscellaneous Symbols and Pictographs
+                [0x1F600, 0x1F64F],  // Emoticons
+                [0x2600, 0x26FF],    // Miscellaneous Symbols
+                [0x2700, 0x27BF],    // Dingbats
+                [0x1F900, 0x1F9FF],  // Supplemental Symbols and Pictographs
+                [0x2000, 0x206F]     // Combining Diacritical Marks for Symbols
+            ];
+            
+            // 遍歷所有可能的 emoji 編碼
+            for (let i = 0; i < ranges.length; i++) {
+                for (let j = ranges[i][0]; j <= ranges[i][1]; j++) {
+                    try {
+                        const emoji = String.fromCodePoint(j);
+                        const div = document.createElement('div');
+                        div.className = 'emoji-item';
+                        
+                        div.innerHTML = `
+                            <span class="emoji">${emoji}</span>
+                            <span class="code">U+${j.toString(16).toUpperCase()}</span>
+                        `;
+
+                        // 添加點擊複製功能
+                        div.onclick = function() {
+                            navigator.clipboard.writeText(emoji).then(() => {
+                                div.classList.add('copied');
+                                setTimeout(() => {
+                                    div.classList.remove('copied');
+                                }, 500);
+                            });
+                        };
+
+                        container.appendChild(div);
+                    } catch (e) {
+                        // 跳過無效的 emoji 編碼
+                        continue;
+                    }
+                }
+            }
+        }
+
+        // 頁面載入時生成 emoji
+        window.onload = generateEmojis;
+    </script>
+</body>
+</html>

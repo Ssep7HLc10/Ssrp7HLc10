@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>MediaPipe 示範專案</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .project-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px 0;
+        }
+
+        .project-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .project-card h2 {
+            color: #2196F3;
+            margin-top: 0;
+            font-size: 1.5em;
+        }
+
+        .project-card p {
+            color: #666;
+            margin: 10px 0;
+            line-height: 1.5;
+        }
+
+        .project-card a {
+            display: inline-block;
+            background: #2196F3;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+
+        .project-card a:hover {
+            background: #1976D2;
+        }
+
+        .category {
+            margin: 40px 0;
+        }
+
+        .category h2 {
+            color: #333;
+            border-bottom: 2px solid #2196F3;
+            padding-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>MediaPipe 互動示範專案</h1>
+
+    <div class="category">
+        <h2>手部辨識專案</h2>
+        <div class="project-grid">
+            <div class="project-card">
+                <h2>手部辨識基礎</h2>
+                <p>展示 MediaPipe 手部辨識的基本功能，包含手部關鍵點偵測與視覺化。</p>
+                <a href="00_手部辨識.html">查看示範</a>
+            </div>
+
+            <div class="project-card">
+                <h2>手部互動玩球</h2>
+                <p>結合物理引擎的互動遊戲，可以用手抓取和投擲虛擬彩球。</p>
+                <a href="00_手部玩球.html">開始遊戲</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="category">
+        <h2>臉部辨識專案</h2>
+        <div class="project-grid">
+            <div class="project-card">
+                <h2>臉部標記</h2>
+                <p>展示 MediaPipe 臉部辨識功能，包含臉部關鍵點和網格的即時繪製。</p>
+                <a href="00_臉部標記.html">查看示範</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="category">
+        <h2>物理引擎示範</h2>
+        <div class="project-grid">
+            <div class="project-card">
+                <h2>物體生成器</h2>
+                <p>使用 Matter.js 物理引擎，點擊畫面生成具有物理特性的 emoji 物體。</p>
+                <a href="00_物體生成.html">開始體驗</a>
+            </div>
+
+            <div class="project-card">
+                <h2>約束示範</h2>
+                <p>展示 Matter.js 中各種物理約束的效果，包含彈性和剛性連接。</p>
+                <a href="00_我的約束.html">查看示範</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="category">
+        <h2>工具</h2>
+        <div class="project-grid">
+            <div class="project-card">
+                <h2>Emoji 列表</h2>
+                <p>提供可搜尋和複製的 emoji 列表，方便在其他專案中使用。</p>
+                <a href="00_我的emoji.html">開啟工具</a>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html> 

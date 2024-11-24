@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Matter.js 約束示範</title>
+    <style>
+        canvas {
+            border: 1px solid #333;
+        }
+    </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <script>
+        // Matter.js 模組別名
+        const Engine = Matter.Engine,
+            Render = Matter.Render,
+            Runner = Matter.Runner,
+            Bodies = Matter.Bodies,
+            Composite = Matter.Composite,
+            Constraint = Matter.Constraint,
+            MouseConstraint = Matter.MouseConstraint,
+            Mouse = Matter.Mouse;
+
+        // 在 Matter.js 模組別名後添加這個函數
+        function emojiToURL(emoji, size = 50) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            ctx.font = `${size}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(emoji, size/2, size/2);
+            return canvas.toDataURL();
+        }
+
+        // 創建一些 emoji 圖片 URL
+        const boxEmoji = emojiToURL('📦');
+        const circleEmoji = emojiToURL('⚽');
+        const bigCircleEmoji = emojiToURL('🌕', 100);
+        const smallCircleEmoji = emojiToURL('🌑', 50);
+        const brickEmoji = emojiToURL('🧱');
+
+        // 創建引擎
+        const engine = Engine.create();
+        const world = engine.world;
+
+        // 創建渲染器
+        const render = Render.create({
+            element: document.body,
+            engine: engine,
+            options: {
+                width: 1280,
+                height: 960,
+                wireframes: false
+            }
+        });
+
+        // 創建邊界
+        const boundaryOptions = {
+            isStatic: true,
+            render: {
+                fillStyle: '#666'
+            }
+        };
+
+        const ground = Bodies.rectangle(640, 950, 1290, 20, boundaryOptions);
+        const leftWall = Bodies.rectangle(10, 480, 20, 960, boundaryOptions);
+        const rightWall = Bodies.rectangle(1270, 480, 20, 960, boundaryOptions);
+        const ceiling = Bodies.rectangle(640, 10, 1290, 20, boundaryOptions);
+
+        // 彈性約束示例1：兩個方形
+        const box1 = Bodies.rectangle(300, 200, 50, 50, {
+            render: {
+                sprite: {
+                    texture: boxEmoji,
+                    xScale: 1,
+                    yScale: 1
+                }
+            }
+        });
+
+        const box2 = Bodies.rectangle(400, 200, 50, 50, {
+            render: {
+                sprite: {
+                    texture: boxEmoji,
+                    xScale: 1,
+                    yScale: 1
+                }
+            }
+        });
+
+        const elasticConstraint1 = Constraint.create({
+            bodyA: box1,
+            bodyB: box2,
+            stiffness: 0.01,
+            render: { lineWidth: 5 }
+        });
+
+        // 彈性約束示例2：圓球和固定點
+        const circle1 = Bodies.circle(500, 200, 20, {
+            render: {
+                sprite: {
+                    texture: circleEmoji,
+                    xScale: 0.8,
+                    yScale: 0.8
+                }
+            }
+        });
+
+        const elasticConstraint2 = Constraint.create({
+            pointA: { x: 500, y: 100 },
+            bodyB: circle1,
+            stiffness: 0.01,
+            render: { lineWidth: 5 }
+        });
+
+        // 剛性約束示例1：兩個不同大小的圓
+        const bigCircle = Bodies.circle(200, 300, 50, {
+            render: {
+                sprite: {
+                    texture: bigCircleEmoji,
+                    xScale: 1,
+                    yScale: 1
+                }
+            }
+        });
+
+        const smallCircle = Bodies.circle(300, 300, 25, {
+            render: {
+                sprite: {
+                    texture: smallCircleEmoji,
+                    xScale: 1,
+                    yScale: 1
+                }
+            }
+        });
+
+        const stiffConstraint1 = Constraint.create({
+            bodyA: bigCircle,
+            bodyB: smallCircle,
+            length: 200,
+            stiffness: 1,
+            render: { lineWidth: 5 }
+        });
+
+        // 剛性約束示例2：圓球和固定點
+        const circle2 = Bodies.circle(600, 300, 20, {
+            render: {
+                sprite: {
+                    texture: circleEmoji,
+                    xScale: 0.8,
+                    yScale: 0.8
+                }
+            }
+        });
+
+        const stiffConstraint2 = Constraint.create({
+            pointA: { x: 600, y: 200 },
+            bodyB: circle2,
+            stiffness: 1,
+            render: { lineWidth: 5 }
+        });
+
+        // 創建方塊塔
+        const stack = [];
+        for (let i = 0; i < 10; i++) {
+            stack.push(
+                Bodies.rectangle(700, 550 - i * 30, 20, 30, {
+                    render: {
+                        sprite: {
+                            texture: brickEmoji,
+                            xScale: 0.4,
+                            yScale: 0.6
+                        }
+                    }
+                })
+            );
+        }
+
+        // 添加滑鼠控制
+        const mouse = Mouse.create(render.canvas);
+        const mouseConstraint = MouseConstraint.create(engine, {
+            mouse: mouse,
+            constraint: {
+                stiffness: 0.2,
+                render: { visible: false }
+            }
+        });
+
+        // 將所有物體添加到世界
+        Composite.add(world, [
+            ground, leftWall, rightWall, ceiling,
+            box1, box2, elasticConstraint1,
+            circle1, elasticConstraint2,
+            bigCircle, smallCircle, stiffConstraint1,
+            circle2, stiffConstraint2,
+            mouseConstraint,
+            ...stack
+        ]);
+
+        // 運行引擎和渲染器
+        Render.run(render);
+        const runner = Runner.create();
+        Runner.run(runner, engine);
+
+        // 修正滑鼠事件
+        render.canvas.addEventListener('mousewheel', function(event) {
+            event.preventDefault();
+        });
+    </script>
+</body>
+</html>
